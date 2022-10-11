@@ -48,6 +48,7 @@ const Home: NextPage = () => {
   const [showConfetti, setShowConfetti] = useState(false)
   const [myTaskToday, setMyTaskToday] = useState<any>([])
   const [publicLogs, setPublicLogs] = useState<any>([])
+  const [isCreatingTask, setIsCreatingTask] = useState(false);
 
   useEffect(() => {
     // this useEffect only set the auth JWT
@@ -61,12 +62,22 @@ const Home: NextPage = () => {
   }, [])
 
   useEffect(() => {
+    const PublicLogs = supabase
+      .from('PublicLogs')
+      .on('*', payload => {
+        setPublicLogs((items:any) => [payload.new, ...items])
+      })
+      .subscribe()
+  }, [])
+
+  useEffect(() => {
     // fetch your task today.
     const fetchPublicLogsToday = async () => {
       const { data, error } = await supabase
         .from('PublicLogs')
         .select('*')
         .eq('date', dateToday)
+        .order('created_at', { ascending: false })
 
       if (data) {
         setPublicLogs(data);
@@ -103,13 +114,16 @@ const Home: NextPage = () => {
   }
 
   const submitCreateTask = async () => {
+    setIsCreatingTask(true);
+    const paramsTask = [
+      { description: task1, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
+      { description: task2, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
+      { description: task3, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday }
+    ];
+
     const { data, error } = await supabase
       .from('Tasks')
-      .insert([
-        { description: task1, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
-        { description: task2, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
-        { description: task3, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday }
-      ])
+      .insert(paramsTask)
 
     if (data) {
       generateToast('Task Created!', 'Yay! Task Created!', 'success');
@@ -119,6 +133,10 @@ const Home: NextPage = () => {
     if (error) {
       generateToast('Ooops something is wrong...', 'We are checking this error.', 'error');
     }
+
+    setMyTaskToday(paramsTask)
+    setIsCreatingTask(false);
+    onClose();
   }
 
   const handleChangeTask1 = (event: any) => setTask1(event.target.value);
@@ -127,26 +145,27 @@ const Home: NextPage = () => {
 
   const handleTaskStatus = async (taskId: any) => {
     const tempTaskList = [...myTaskToday]
+
+    // find the task id
     const task = tempTaskList.find(item => {
-      if(item.id === taskId) {
-        if(item.status === 'new') {
-          item.status = 'done'
-          setShowConfetti(true);
-        } else {
-          item.status = 'new'
-        }
+      if(item.id === taskId && item.status === 'new') {
+        return item;  
       }
-      return item;
     })
 
+    task.status = 'done';
+
+    setMyTaskToday(tempTaskList);
+
+    // update from supabase
     const { data, error } = await supabase
       .from('Tasks')
       .update({ status: 'done' })
       .eq('id', taskId)
 
     if (data) {
-      console.log('task: ', task)
       createLogs(user, [task.description], 'update')
+      setShowConfetti(true);
       setTimeout(() => {
         setShowConfetti(false);
       }, 5000)
@@ -155,11 +174,20 @@ const Home: NextPage = () => {
 
   const RenderMyTaskToday = () => {
     if (myTaskToday.length === 0) {
-      return <Text>No Task</Text>
+      return <Box>
+        <Text color={'gray.500'}>You do not have any task for today</Text>
+        <Button colorScheme='blue' onClick={onOpen}>Create Now</Button>
+        </Box>
     }
 
     return myTaskToday.map((item: any) => {
-      return <Checkbox key={item.id} onChange={() => { handleTaskStatus(item.id) }} isChecked={item.status === 'done'}>{item.description}</Checkbox>
+      return <Checkbox
+        isDisabled={item.status === 'done'}
+        key={item.id}
+        onChange={() => { handleTaskStatus(item.id) }} 
+        isChecked={item.status === 'done'}>
+          {item.description}
+        </Checkbox>
     });
   }
 
@@ -190,13 +218,12 @@ const Home: NextPage = () => {
       <SignedIn>
         <Flex color='white'>
           <Box flex='1' bg='black' overflow={'hidden'}>
-            <RenderJitsi user={user} />
+            {/* <RenderJitsi user={user} /> */}
           </Box>
           <Box w='400px' border={'2px'} borderColor={'black'}>
             <Box p={5} backgroundColor={'white'} shadow='md' borderWidth='1px'>
               <Flex justifyContent={'space-between'} >
-                <Heading color={'black'} fontSize='xl' pr={4}>My Task Today</Heading>
-                <Button colorScheme='blue' size='xs' onClick={onOpen}>Create Task</Button>
+                <Heading color={'black'} fontSize='xl' pr={4}>To-do list</Heading>
               </Flex>
 
               <Divider />
@@ -235,16 +262,15 @@ const Home: NextPage = () => {
       <Modal isOpen={isOpen} onClose={onClose}>
         <ModalOverlay />
         <ModalContent>
-          <ModalHeader>Create your task today</ModalHeader>
+          <ModalHeader>Start creating your task</ModalHeader>
           <ModalCloseButton />
           <ModalBody>
-            <Input onChange={handleChangeTask1} mb={4} placeholder='Today I will finish...' />
-            <Input onChange={handleChangeTask2} mb={4} placeholder='Today I will complete...' />
-            <Input onChange={handleChangeTask3} placeholder='Today I will be productive...' />
+            <Input onChange={handleChangeTask1} mb={4} placeholder='I want to finish...' />
+            <Input onChange={handleChangeTask2} mb={4} placeholder='I want to complete...' />
+            <Input onChange={handleChangeTask3} placeholder='I want to finalize...' />
           </ModalBody>
-
           <ModalFooter>
-            <Button onClick={submitCreateTask} colorScheme='blue' >Save and Share</Button>
+            <Button isLoading={isCreatingTask} onClick={submitCreateTask} loadingText='Creating Task' colorScheme='blue' >Save and Share</Button>
           </ModalFooter>
         </ModalContent>
       </Modal>

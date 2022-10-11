@@ -10,8 +10,6 @@ import {
     Badge
   } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
-import supabase from '../util/supabase'
-
 
 const ProgressFeed = (props: any) => {
   const { publicLogs } = props;
@@ -24,12 +22,12 @@ const ProgressFeed = (props: any) => {
         <List spacing={3}>
           {publicLogs.map((logs: any) => {
             return <ListItem key={logs.id} color={'black'}>
-              <ListIcon as={CheckCircleIcon} color='green.500' />
-              {(logs.type === 'create')
-                ? `${logs.created_by} created a task ${logs.message} `
-                : `${logs.created_by} finished the task ${logs.message} `
-              }
               {(logs.type === 'create') ? <Badge colorScheme='purple'>new</Badge> : <Badge colorScheme='green'>success</Badge>}
+              {(logs.type === 'create')
+                ? ` ${logs.created_by} created a task ${logs.message}`
+                : ` ${logs.created_by} finished the task ${logs.message}`
+              }
+              
             </ListItem>
           })}
         </List>
