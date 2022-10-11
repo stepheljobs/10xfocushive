@@ -218,7 +218,7 @@ const Home: NextPage = () => {
       <SignedIn>
         <Flex color='white'>
           <Box flex='1' bg='black' overflow={'hidden'}>
-            {/* <RenderJitsi user={user} /> */}
+            <RenderJitsi user={user} />
           </Box>
           <Box w='400px' border={'2px'} borderColor={'black'}>
             <Box p={5} backgroundColor={'white'} shadow='md' borderWidth='1px'>
