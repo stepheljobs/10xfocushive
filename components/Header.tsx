@@ -4,10 +4,10 @@ import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import { Flex, Heading  } from "@chakra-ui/react";
 
 const Header = () => (
-  <Flex justifyContent={'space-between'} p={4} shadow="md">
+  <Flex justifyContent={'space-between'} p={4}>
     <div>
       <Link href="/">
-          <Heading >10xFocusHive</Heading >
+          <Heading as='h3' size='lg'>10xFocusHive</Heading >
       </Link>
     </div>
     <div>
