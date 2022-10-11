@@ -7,9 +7,11 @@ import {
     Box,
     Text,
     Heading,
-    Badge
+    Badge,
+    Code
   } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
+import moment from 'moment';
 
 const ProgressFeed = (props: any) => {
   const { publicLogs } = props;
@@ -24,10 +26,10 @@ const ProgressFeed = (props: any) => {
             return <ListItem key={logs.id} color={'black'}>
               {(logs.type === 'create') ? <Badge colorScheme='purple'>new</Badge> : <Badge colorScheme='green'>success</Badge>}
               {(logs.type === 'create')
-                ? ` ${logs.created_by} created a task ${logs.message}`
-                : ` ${logs.created_by} finished the task ${logs.message}`
+                ? ` ${logs.created_by} created a task ${logs.message} | `
+                : ` ${logs.created_by} finished the task ${logs.message} | `
               }
-              
+              <Code>{moment(logs.created_at).fromNow()}</Code>
             </ListItem>
           })}
         </List>
