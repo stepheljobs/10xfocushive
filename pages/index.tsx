@@ -5,6 +5,8 @@ import styles from '../styles/Home.module.css'
 import { SignedIn, SignedOut, SignIn, useUser, useSession } from '@clerk/nextjs'
 import { useToast } from '@chakra-ui/react'
 import Confetti from 'react-confetti'
+import moment from 'moment';
+
 import {
   Flex,
   Box,
@@ -31,6 +33,9 @@ import ProgressFeed from '../components/ProgressFeed'
 import RenderJitsi from '../components/VideoConference'
 import { useAuth } from '@clerk/clerk-react';
 import supabase from '../util/supabase'
+import { createLogs } from '../util/functions'
+
+const dateToday = moment().format("YYYY-MM-DD");
 
 const Home: NextPage = () => {
   const { getToken } = useAuth();
@@ -42,8 +47,10 @@ const Home: NextPage = () => {
   const [task3, setTask3] = useState<String>('');
   const [showConfetti, setShowConfetti] = useState(false)
   const [myTaskToday, setMyTaskToday] = useState<any>([])
+  const [publicLogs, setPublicLogs] = useState<any>([])
 
   useEffect(() => {
+    // this useEffect only set the auth JWT
     const setupSupabase = async () => {
       const token = await getToken({ template: 'supabase' });
       if (token) {
@@ -54,10 +61,27 @@ const Home: NextPage = () => {
   }, [])
 
   useEffect(() => {
+    // fetch your task today.
+    const fetchPublicLogsToday = async () => {
+      const { data, error } = await supabase
+        .from('PublicLogs')
+        .select('*')
+        .eq('date', dateToday)
+
+      if (data) {
+        setPublicLogs(data);
+      }
+    }
+    fetchPublicLogsToday();
+  }, [])
+
+  useEffect(() => {
+    // fetch your task today.
     const fetchMyTaskToday = async () => {
       const { data, error } = await supabase
         .from('Tasks')
-        .select("*")
+        .select('*')
+        .eq('date', dateToday)
         .eq('created_by', user?.id)
 
       if (data) {
@@ -67,29 +91,33 @@ const Home: NextPage = () => {
     fetchMyTaskToday();
   }, [user])
 
-  const submitCreateTask = async () => {
-    // const token = await getToken({ template: 'supabase' });
-    // if (token) {
-    //   supabase.auth.setAuth(token);
-    // }
+  const generateToast = (title: string, description: string, status: any) => {
+    toast({
+      title: title,
+      description: description,
+      status: status,
+      duration: 5000,
+      position: 'top',
+      isClosable: true,
+    })
+  }
 
+  const submitCreateTask = async () => {
     const { data, error } = await supabase
       .from('Tasks')
       .insert([
-        { description: task1, status: 'new', created_by: user?.id, first_name: user?.firstName },
-        { description: task2, status: 'new', created_by: user?.id, first_name: user?.firstName },
-        { description: task3, status: 'new', created_by: user?.id, first_name: user?.firstName }
+        { description: task1, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
+        { description: task2, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday },
+        { description: task3, status: 'new', created_by: user?.id, first_name: user?.firstName, date: dateToday }
       ])
 
     if (data) {
-      toast({
-        title: 'Task Created!',
-        description: "Yay! Task Created!",
-        status: 'success',
-        duration: 5000,
-        position: 'top',
-        isClosable: true,
-      })
+      generateToast('Task Created!', 'Yay! Task Created!', 'success');
+      createLogs(user, [task1, task2, task3], 'create')
+    }
+
+    if (error) {
+      generateToast('Ooops something is wrong...', 'We are checking this error.', 'error');
     }
   }
 
@@ -98,13 +126,27 @@ const Home: NextPage = () => {
   const handleChangeTask3 = (event: any) => setTask3(event.target.value);
 
   const handleTaskStatus = async (taskId: any) => {
+    const tempTaskList = [...myTaskToday]
+    const task = tempTaskList.find(item => {
+      if(item.id === taskId) {
+        if(item.status === 'new') {
+          item.status = 'done'
+          setShowConfetti(true);
+        } else {
+          item.status = 'new'
+        }
+      }
+      return item;
+    })
+
     const { data, error } = await supabase
       .from('Tasks')
       .update({ status: 'done' })
       .eq('id', taskId)
 
     if (data) {
-      setShowConfetti(true);
+      console.log('task: ', task)
+      createLogs(user, [task.description], 'update')
       setTimeout(() => {
         setShowConfetti(false);
       }, 5000)
@@ -115,9 +157,9 @@ const Home: NextPage = () => {
     if (myTaskToday.length === 0) {
       return <Text>No Task</Text>
     }
-    console.log('myTaskToday: ==============   ', myTaskToday)
+
     return myTaskToday.map((item: any) => {
-      return <Checkbox onChange={() => { handleTaskStatus(item.id) }} isChecked={item.status === 'done'}>{item.description}</Checkbox>
+      return <Checkbox key={item.id} onChange={() => { handleTaskStatus(item.id) }} isChecked={item.status === 'done'}>{item.description}</Checkbox>
     });
   }
 
@@ -166,9 +208,9 @@ const Home: NextPage = () => {
         </Flex>
       </SignedIn>
 
-      <Flex marginTop={16}>
-        <ProgressFeed />
-        <Box>
+      <Flex marginTop={16} justifyContent="center">
+        <ProgressFeed publicLogs={publicLogs} />
+        {/* <Box>
           <Text fontWeight={'bold'}>Who is doing co-working today?</Text>
           <Box p={4} m={4} backgroundColor={'white'} shadow='md' borderWidth='1px'>
             <Heading fontSize='xl'>Stephel Maca</Heading>
@@ -187,7 +229,7 @@ const Home: NextPage = () => {
               </Checkbox>
             </Stack>
           </Box>
-        </Box>
+        </Box> */}
       </Flex>
 
       <Modal isOpen={isOpen} onClose={onClose}>

@@ -1,6 +1,6 @@
 import Header from "./Header";
 
-const Layout = ({ children }) => (
+const Layout = ({ children }: any) => (
   <>
     <Header />
     <main>{children}</main>

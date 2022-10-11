@@ -16,8 +16,6 @@ const Header = () => (
           userProfileMode="navigation"
           userProfileUrl="/user"
           afterSignOutUrl="/"
-          afterSignOutAll="/"
-          afterSignOutOneUrl="/"
         />
       </SignedIn>
     </div>

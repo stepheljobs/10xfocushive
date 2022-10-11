@@ -6,32 +6,32 @@ import {
     Flex,
     Box,
     Text,
+    Heading,
+    Badge
   } from '@chakra-ui/react'
 import { CheckCircleIcon } from '@chakra-ui/icons'
+import supabase from '../util/supabase'
 
-const ProgressFeed = () => {
+
+const ProgressFeed = (props: any) => {
+  const { publicLogs } = props;
+
     return <Flex flexDirection={'column'} color='white'>
-      <Box p={8}>
-        <Text color={'black'} fontWeight="bold">Whats happening today?</Text>
+      <Box p={4}>
+        <Heading color={'black'} fontWeight="bold">Whats happening today?</Heading>
       </Box>
-      <Box p={8} flex='1'>
+      <Box p={4} flex='1'>
         <List spacing={3}>
-          <ListItem color={'black'}>
-            <ListIcon as={CheckCircleIcon} color='green.500' />
-            Lorem ipsum dolor sit amet, consectetur adipisicing elit
-          </ListItem>
-          <ListItem color={'black'}>
-            <ListIcon as={CheckCircleIcon} color='green.500' />
-            Assumenda, quia temporibus eveniet a libero incidunt suscipit
-          </ListItem>
-          <ListItem color={'black'}>
-            <ListIcon as={CheckCircleIcon} color='green.500' />
-            Quidem, ipsam illum quis sed voluptatum quae eum fugit earum
-          </ListItem>
-          <ListItem color={'black'}>
-            <ListIcon as={CheckCircleIcon} color='green.500' />
-            Quidem, ipsam illum quis sed voluptatum quae eum fugit earum
-          </ListItem>
+          {publicLogs.map((logs: any) => {
+            return <ListItem key={logs.id} color={'black'}>
+              <ListIcon as={CheckCircleIcon} color='green.500' />
+              {(logs.type === 'create')
+                ? `${logs.created_by} created a task ${logs.message} `
+                : `${logs.created_by} finished the task ${logs.message} `
+              }
+              {(logs.type === 'create') ? <Badge colorScheme='purple'>new</Badge> : <Badge colorScheme='green'>success</Badge>}
+            </ListItem>
+          })}
         </List>
       </Box>
     </Flex>
