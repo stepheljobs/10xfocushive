@@ -105,7 +105,7 @@ const Home: NextPage = () => {
       <SignedIn>
         <Flex color="white">
           <Box flex="1" bg="black" overflow={"hidden"}>
-            {/* <RenderJitsi user={user} /> */}
+            <RenderJitsi user={user} />
           </Box>
           <Box w="400px" border={"2px"} borderColor={"black"}>
             <TodoList supabase={supabase} setShowConfetti={setShowConfetti} createLogs={createLogs} user={user} generateToast={generateToast} />
