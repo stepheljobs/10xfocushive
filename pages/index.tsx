@@ -94,7 +94,11 @@ const Home: NextPage = () => {
       <SignedOut>
         <Flex justifyContent={"space-around"}>
           <Box>
-            <Heading color={"black"}>How does it work?</Heading>
+            <Heading mb={8} color={"black"}>FREE virtual coworking for introverts</Heading>
+            <Text fontSize="lg" fontWeight={"bold"}>
+              How does it work?
+            </Text>
+            <Divider />
             <List mb={8}>
               <ListItem>
                 <ListIcon as={CheckCircleIcon} color="green.500" />
@@ -122,7 +126,7 @@ const Home: NextPage = () => {
             </List>
 
             <Text fontSize="lg" fontWeight={"bold"}>
-              Join other 10xFHer who get things done! one task at a time.
+              Join other 10xFHer get work done together quietly!
             </Text>
             <Divider />
 
