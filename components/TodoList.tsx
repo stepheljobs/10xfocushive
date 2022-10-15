@@ -109,7 +109,7 @@ const TodoList = (props: any) => {
     setShowConfetti(true);
     setTimeout(() => {
         setShowConfetti(false);
-    }, 2000);
+    }, 5000);
   };
 
   const handleCreateTask = async (task: string) => {
